@@ -4,12 +4,22 @@
 
 #define UNAVAILABLE_FOR_READ  (byte)1
 #define AVAILABLE_FOR_READ  (byte)0
+#define PAPER_WIDTH 15 //cm
+#define CANVAS_DIST 3 //cm
+#define CANVAS_WIDTH 300 //px
+#define ARM_ONE 9.5 //cm
+#define ARM_TWO 11.5 //cm
+#define HEIGHT_DISPLACE 3.125
 
-const int mid_pixel;
-const double pix_cm;
-const double dist_canvas;
-const double rad_to_deg = 180.0 / PI;
-const float height_displace = 3.5;
+const int mid_pixel = CANVAS_WIDTH / 2;
+const double pix_cm = PAPER_WIDTH / CANVAS_WIDTH;
+const double dist_canvas = CANVAS_DIST;
+const double rad_to_deg = 180.0 / 3.14;
+
+
+int floorAngle;
+double a,b,c,g,aTone,aTtwo,aTthree,aTfour;
+
 short int current_working_point = 0;
 
 int servoA, servoB, servoC, servoD;
@@ -45,24 +55,33 @@ void serialEvent(){
 }
 
 int calculateFloorAngle(int x, int y){
-  float a = abs(x - mid_pixel) * pix_cm;
-  float b = (y * pix_cm) + dist_canvas;
-  float c = sqrt(pow(a, 2) + pow(b, 2));
+  a = abs(x - mid_pixel) * pix_cm;
+  b = (y * pix_cm) + dist_canvas;
+  c = sqrt(pow(a, 2) + pow(b, 2));
 
-  float floorAngle = cos(a/c) * rad_to_deg;
+  float temp = cos(a/c) * rad_to_deg;
+  floorAngle = round(temp);
 
   if(x < mid_pixel)
-    return round(floorAngle);
-  return round(180 - floorAngle);
+    floorAngle = round(floorAngle);
+   else
+    floorAngle = round(180 - floorAngle);
+  return floorAngle;
 }
 
 void calculateTriangleAngles(int x, int y){
   servoA = calculateFloorAngle(x, y);
-//  int g = sqrt(pow(height_displace, 2) + pow(c, 2);
-  
+  g = sqrt(pow(HEIGHT_DISPLACE, 2) + pow(c, 2));
+  aTone = atan(HEIGHT_DISPLACE / c) * rad_to_deg;
+  aTtwo = getAngleCos(g, ARM_TWO, ARM_ONE);
+  servoD = 90 - round(aTone + aTtwo);
+  aTthree = atan(c / HEIGHT_DISPLACE) * rad_to_deg;
+  aTfour = getAngleCos(g, ARM_ONE, ARM_TWO);
+  servoB = 180 - round(aTthree + aTfour);
+  servoC = 180 - round(aTfour + aTtwo);
 }
 
-float getAngleCos(int a, int b, int c){
+float getAngleCos(double a, double b, double c){
   float result = (pow(a, 2) + pow(b, 2) - pow(c, 2) / ( 2 * a * b));
   return acos(result) * rad_to_deg;
 }
