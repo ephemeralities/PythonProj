@@ -26,9 +26,13 @@ int servoA, servoB, servoC, servoD;
 
 RingBuffer<unsigned char, 40> points_queue;
 
+SoftwareSerial arduinoTwo(12, 13)
+
 void setup() {
   Serial.begin(9600);
   Serial.write(AVAILABLE_FOR_READ);
+  arduinoTwo.begin(9600);
+  ard
 }
 
 void loop() {
